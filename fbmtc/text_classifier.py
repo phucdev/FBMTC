@@ -1,25 +1,11 @@
-from typing import Dict
-
 from flair.data import Corpus
 from flair.datasets import CSVClassificationCorpus
-from flair.embeddings import FastTextEmbeddings, FlairEmbeddings, DocumentRNNEmbeddings, TokenEmbeddings, WordEmbeddings
+from flair.embeddings import DocumentRNNEmbeddings
 from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
 import sys
 import json
-
-
-embedding_mapping: Dict[str, TokenEmbeddings] = {
-    # FastText variants
-    "en-crawl": WordEmbeddings("en-crawl"),
-    "biowordvec": FastTextEmbeddings("https://ftp.ncbi.nlm.nih.gov/pub/lu/Suppl/BioSentVec"
-                                     "/BioWordVec_PubMed_MIMICIII_d200.bin", use_local=False),
-    # Flair variants
-    "en-forward": FlairEmbeddings("en-forward"),
-    "en-backward": FlairEmbeddings("en-backrward"),
-    "pubmed_forward": FlairEmbeddings("pubmed-forward"),
-    "pubmed_backward": FlairEmbeddings("pubmed-backward")
-}
+from fbmtc import embedding_mapping
 
 
 if __name__ == "__main__":
