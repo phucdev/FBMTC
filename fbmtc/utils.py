@@ -1,6 +1,37 @@
-import pandas as pd
-from sklearn.model_selection import train_test_split
+from flair.embeddings import WordEmbeddings, FastTextEmbeddings, FlairEmbeddings, \
+    TransformerWordEmbeddings
 
+
+def get_general_embeddings():
+    return [
+        WordEmbeddings("en-crawl"),
+        FlairEmbeddings("en-forward"),
+        FlairEmbeddings("en-backward")
+    ]
+
+
+def get_mixed_bio_embeddings():
+    return [
+        FastTextEmbeddings("data/BioWordVec_PubMed_MIMICIII_d200.bin"),
+        FlairEmbeddings("en-forward"),
+        FlairEmbeddings("en-backward")
+    ]
+
+
+def get_bio_embeddings():
+    return [
+        FastTextEmbeddings("data/BioWordVec_PubMed_MIMICIII_d200.bin"),
+        FlairEmbeddings("pubmed-forward"),
+        FlairEmbeddings("pubmed-backward")
+    ]
+
+
+def get_scibert_flair_embeddings():
+    return [
+        TransformerWordEmbeddings(model="allenai/scibert_scivocab_uncased", fine_tune=True),
+        FlairEmbeddings("pubmed-forward"),
+        FlairEmbeddings("pubmed-backward")
+    ]
 
 # pd.read_csv(DATAPATH+'/train.tsv', sep='\t', header=0)
 #
@@ -11,3 +42,4 @@ from sklearn.model_selection import train_test_split
 #
 # train[['doid', 'text']].to_csv(DATAPATH+'/task2/train.csv', sep='\t', index = False, header = True)
 # dev[['doid', 'text']].to_csv(DATAPATH+'/task2/dev.csv', sep='\t', index = False, header = True)
+
