@@ -3,10 +3,6 @@
   "learning_rate": 0.1,
   "max_epochs": 150,
   "batch_size": 32,
-  "word_embeddings": [
-    "biowordvec",
-    "pubmed-forward",
-    "pubmed-backward"
-  ],
+  "word_embeddings": "general",
   "label_name": "label_is_cancer"
 }
