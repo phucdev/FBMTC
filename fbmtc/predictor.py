@@ -13,7 +13,7 @@ def predict_instance(classifier: TextClassifier, example: Sentence) -> Dict:
     flair_result = classifier.predict(example)[0]
     result = {
                 "text": " ".join([token.text for token in flair_result.tokens]),
-                "prediction": flair_result.labels
+                "prediction": flair_result.labels[0].value
     }
     return result
 
