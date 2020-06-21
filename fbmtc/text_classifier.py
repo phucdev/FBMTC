@@ -5,7 +5,7 @@ from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
 import sys
 import json
-from fbmtc import embedding_mapping
+from fbmtc import utils
 
 
 if __name__ == "__main__":
@@ -29,7 +29,17 @@ if __name__ == "__main__":
     # TODO calculate inverted class frequencies to pass as loss weights to the text classifier
 
     # initialize embeddings
-    word_embeddings = [embedding_mapping[emb_name] for emb_name in config["word_embeddings"]]
+    word_embeddings = None
+    chosen_embeddings = config["word_embeddings"]
+    if chosen_embeddings == "general":
+        word_embeddings = utils.get_general_embeddings()
+    elif chosen_embeddings == "mixed_bio":
+        word_embeddings = utils.get_mixed_bio_embeddings()
+    elif chosen_embeddings == "bio":
+        word_embeddings = utils.get_bio_embeddings()
+    elif chosen_embeddings == "scibert_flair":
+        word_embeddings = utils.get_scibert_flair_embeddings()
+
     # TODO keep in mind that state of the art models use the fine tuned transformer approach:
     #  https://github.com/flairNLP/flair/issues/1527#issuecomment-616638837
     #  Corresponding example code: https://github.com/flairNLP/flair/issues/1527#issuecomment-616095945
@@ -48,4 +58,4 @@ if __name__ == "__main__":
                   learning_rate=config["learning_rate"],
                   mini_batch_size=config["batch_size"],
                   max_epochs=config["max_epochs"],
-                  embeddings_in_memory=True)
+                  embeddings_storage_mode="gpu")
