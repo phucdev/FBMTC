@@ -9,6 +9,7 @@ from flair.embeddings import TransformerDocumentEmbeddings
 from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
 
+from fbmtc import utils
 
 if __name__ == "__main__":
     """
@@ -29,12 +30,13 @@ if __name__ == "__main__":
 
     # 2. create the label dictionary
     label_dict = corpus.make_label_dictionary()
+    class_weights = utils.get_inverted_class_balance(corpus.train.dataset)
 
     # 3. initialize transformer document embeddings (many models are available)
-    document_embeddings = TransformerDocumentEmbeddings('distilbert-base-uncased', fine_tune=True)
+    document_embeddings = TransformerDocumentEmbeddings('allenai/scibert_scivocab_uncased', fine_tune=True)
 
     # 4. create the text classifier
-    classifier = TextClassifier(document_embeddings, label_dictionary=label_dict)
+    classifier = TextClassifier(document_embeddings, label_dictionary=label_dict, loss_weights=class_weights)
 
     # 5. initialize the text classifier trainer with Adam optimizer
     trainer = ModelTrainer(classifier, corpus, optimizer=Adam)

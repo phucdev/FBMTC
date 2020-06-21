@@ -1,5 +1,5 @@
 from flair.data import Corpus
-from flair.datasets import CSVClassificationCorpus
+from flair.datasets import CSVClassificationCorpus, CSVClassificationDataset
 from flair.embeddings import DocumentRNNEmbeddings
 from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
@@ -27,6 +27,7 @@ if __name__ == "__main__":
     # make the label dictionary from the corpus
     label_dictionary = corpus.make_label_dictionary()
     # TODO calculate inverted class frequencies to pass as loss weights to the text classifier
+    class_weights = utils.get_inverted_class_balance(corpus.train.dataset)
 
     # initialize embeddings
     word_embeddings = None
@@ -48,8 +49,8 @@ if __name__ == "__main__":
     # initialize text classifier
 
     classifier = TextClassifier(document_embeddings,
-                                label_dictionary=corpus.make_label_dictionary(),
-                                multi_label=False)
+                                label_dictionary=label_dictionary,
+                                multi_label=False, loss_weights=class_weights)
 
     # initialize trainer
     trainer = ModelTrainer(classifier, corpus)

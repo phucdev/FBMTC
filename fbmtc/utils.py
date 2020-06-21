@@ -33,6 +33,27 @@ def get_scibert_flair_embeddings():
         FlairEmbeddings("pubmed-backward")
     ]
 
+
+def get_class_balance(dataset):
+    labels = [doc[0] for doc in dataset.raw_data]
+    label_freqs = {}
+    for clazz in set(labels):
+        label_freqs[clazz] = float(labels.count(clazz))
+    return label_freqs
+
+
+def get_inverted_class_balance(dataset):
+    class_balance = get_class_balance(dataset)
+    # Invert
+    for k, v in class_balance.items():
+        class_balance[k] = (1 / v)
+    weights_sum = sum(class_balance.values())
+    # Normalize
+    for k, v in class_balance.items():
+        class_balance[k] = v / weights_sum
+    return class_balance
+
+
 # pd.read_csv(DATAPATH+'/train.tsv', sep='\t', header=0)
 #
 # train, dev, train_y, dev_y = train_test_split(train_df, train_df['is_cancer'], stratify=train_df['is_cancer'], test_size=0.2)
