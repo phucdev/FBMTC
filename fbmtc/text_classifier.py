@@ -54,6 +54,7 @@ if __name__ == "__main__":
     # initialize trainer
     trainer = ModelTrainer(classifier, corpus)
 
+    # train_with_dev: use option for final model
     trainer.train(sys.argv[2],
                   learning_rate=config["learning_rate"],
                   mini_batch_size=config["batch_size"],
