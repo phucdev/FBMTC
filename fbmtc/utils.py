@@ -12,9 +12,9 @@ def get_general_embeddings():
 
 def get_mixed_bio_embeddings():
     return [
-        FastTextEmbeddings("data/BioWordVec_PubMed_MIMICIII_d200.bin"),
-        FlairEmbeddings("en-forward"),
-        FlairEmbeddings("en-backward")
+        WordEmbeddings("en-crawl"),
+        FlairEmbeddings("pubmed-forward"),
+        FlairEmbeddings("pubmed-backward")
     ]
 
 
