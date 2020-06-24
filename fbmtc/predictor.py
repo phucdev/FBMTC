@@ -1,11 +1,12 @@
+from pathlib import Path
+
 from flair.models import TextClassifier
 from flair.data import Sentence
-from typing import Dict, List, Any
-from os.path import join
+from typing import Dict, List, Any, Union
 
 
-def load_predictor(model_dir: str, archive_filename: str = "final-model.pt") -> TextClassifier:
-    archive_path = join(model_dir, archive_filename)
+def load_predictor(model_dir: Union[str, Path], archive_filename: str = "best-model.pt") -> TextClassifier:
+    archive_path = Path(model_dir).joinpath(archive_filename)
     return TextClassifier.load(archive_path)
 
 
