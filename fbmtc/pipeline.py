@@ -21,5 +21,5 @@ def predict_docs(docs, binary_classifier_path, multi_class_classifier_path):
     binary_classifier = predictor.load_predictor(binary_classifier_path)
     multi_class_classifier = predictor.load_predictor(multi_class_classifier_path)
 
-    labeled_docs = docs.apply(lambda doc: pred_docs(doc, binary_classifier, multi_class_classifier), axis=1)
+    labeled_docs = pred_docs.apply(lambda doc: predict_doc(doc, binary_classifier, multi_class_classifier), axis=1)
     return labeled_docs
