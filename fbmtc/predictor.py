@@ -14,7 +14,7 @@ def predict_instance(classifier: TextClassifier, example: Sentence) -> Dict:
     flair_result = classifier.predict(example)[0]
     result = {
                 "text": " ".join([token.text for token in flair_result.tokens]),
-                "prediction": flair_result.labels[0].value
+                "prediction": int(flair_result.labels[0].value)
     }
     return result
 
@@ -29,7 +29,7 @@ def batched_predict_instances(
         flair_batch_results = classifier.predict(batch_examples, mini_batch_size=batch_size)
 
         batch_results = [{"text": " ".join([token.text for token in r.tokens]),
-                          "prediction": r}
+                          "prediction": int(r.labels[0].value)}
                          for r in flair_batch_results]
         results.extend(batch_results)
     return results
