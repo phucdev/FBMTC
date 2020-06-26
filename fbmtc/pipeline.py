@@ -8,20 +8,25 @@ from sklearn.metrics import f1_score
 
 
 def predict_doc(doc, binary_classifier, multi_class_classifier):
+
     binary_result = predictor.predict_instance(binary_classifier, Sentence(doc['text']))['prediction']
-    if binary_result != NEGATIVE_IS_CANCER:
-        doc['is_cancer'] = binary_result
-        multi_class_result = predictor.predict_instance(multi_class_classifier, Sentence(doc['text']))['prediction']
-        doc['doid'] = multi_class_result
+
+    if multi_class_classifier is not None:
+        if binary_result != NEGATIVE_IS_CANCER:
+            doc['is_cancer'] = binary_result
+            multi_class_result = predictor.predict_instance(multi_class_classifier, Sentence(doc['text']))['prediction']
+            doc['doid'] = multi_class_result
+        else:
+            doc['is_cancer'] = NEGATIVE_IS_CANCER
+            doc['doid'] = NEGATIVE_DOID
     else:
-        doc['is_cancer'] = NEGATIVE_IS_CANCER
-        doc['doid'] = NEGATIVE_DOID
+        doc['is_cancer']= binary_result
     return doc
 
 
 def predict_docs(docs: Union[str, Path],
                  binary_classifier_model_dir: Union[str, Path],
-                 multi_class_classifier_model_dir: Union[str, Path],
+                 multi_class_classifier_model_dir: Union[str, Path] = None,
                  binary_classifier_model_archive: str = 'best-model.pt',
                  multi_class_classifier_model_archive: str = 'best-model.pt'
                  ):
@@ -37,8 +42,10 @@ def predict_docs(docs: Union[str, Path],
 
     binary_classifier = predictor.load_predictor(model_dir=binary_classifier_model_dir,
                                                  archive_filename=binary_classifier_model_archive)
-    multi_class_classifier = predictor.load_predictor(model_dir=multi_class_classifier_model_dir,
-                                                      archive_filename=multi_class_classifier_model_archive)
+    multi_class_classifier = None
+    if multi_class_classifier_model_dir is not None and multi_class_classifier_model_archive is not None:
+        multi_class_classifier = predictor.load_predictor(model_dir=multi_class_classifier_model_dir,
+                                                          archive_filename=multi_class_classifier_model_archive)
 
     labeled_docs = pred_docs.apply(lambda doc: predict_doc(doc, binary_classifier, multi_class_classifier), axis=1)
     return labeled_docs
