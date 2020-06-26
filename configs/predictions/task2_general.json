@@ -1,0 +1,7 @@
+{
+	"prediction_file": "data/test_blind.tsv",
+	"binary_model_dir": "models/binary_general_classifier",
+	"multi_class_model_dir": "models/multi_class_general_classifier",
+	"export_column": ["doid","is_cancer"],
+	"prediction_output_files": ["predictions/Team_Flair_general_multi_class.csv", "predictions/Team_Flair_general_binary.csv"]
+}
