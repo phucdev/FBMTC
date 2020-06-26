@@ -88,7 +88,7 @@ if __name__ == "__main__":
     prediction_file = config['prediction_file']
     binary_model_dir = config['binary_model_dir']
     multi_class_model_dir = config.get('multi_class_model_dir', None)
-    export_columns = config['export_column']
+    export_columns = config['export_columns']
     prediction_output_files = config['prediction_output_files']
 
     start = time.time()

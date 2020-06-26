@@ -1,6 +1,6 @@
 {
 	"prediction_file": "data/test_blind.tsv",
 	"binary_model_dir": "models/binary_general_classifier",
-	"export_column": ["is_cancer"],
+	"export_columns": ["is_cancer"],
 	"prediction_output_files": ["predictions/Team_Flair_general_binary.csv"]
 }
