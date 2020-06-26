@@ -6,6 +6,9 @@ from fbmtc import predictor, NEGATIVE_IS_CANCER, NEGATIVE_DOID
 from flair.data import Sentence
 from sklearn.metrics import f1_score
 
+import time
+import sys
+import json
 
 def predict_doc(doc, binary_classifier, multi_class_classifier):
 
@@ -73,3 +76,28 @@ def evaluate_predictions(docs: Union[str, Path],
     target_pred = pred_frame[target_attribute].tolist()
 
     return f1_score(target_true, target_pred, average=average)
+
+if __name__ == "__main__":
+    """
+    python pipeline.py config_file
+    """
+
+    with open(sys.argv[1], 'rb') as f:
+        config = json.load(f)
+
+    prediction_file = config['prediction_file']
+    binary_model_dir = config['binary_model_dir']
+    multi_class_model_dir = config.get('multi_class_model_dir', None)
+    export_columns = config['export_column']
+    prediction_output_files = config['prediction_output_files']
+
+    start = time.time()
+    df = predict_docs(prediction_file,
+                        binary_classifier_model_dir=binary_model_dir,
+                        multi_class_classifier_model_dir= multi_class_model_dir
+                        )
+    print('runtime:', '{0:.2f}'.format(time.time() - start), 'seconds')
+
+    for i, column in enumerate(export_columns):
+        df[['pmid', column]].to_csv(prediction_output_files[i], sep=',', index=False)
+        print('Exported output to:', prediction_output_files[i])
