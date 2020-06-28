@@ -1,5 +1,6 @@
 {
   "data_folder": "data/task2",
+  "task": "task2",
   "learning_rate": 0.1,
   "max_epochs": 150,
   "batch_size": 32,
