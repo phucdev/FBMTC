@@ -23,7 +23,7 @@ if __name__ == "__main__":
     dropout = config["dropout"] if "dropout" in config else 0.5
     doc_embedding = config["doc_embedding"] if "doc_embedding" in config else "normal_rnn"
     attention_size = config["attention_size"] if "attention_size" in config else 100
-    use_loss_weights = config["use_loss_weights"] if "use_loss_weights" in config else False
+    use_loss_weights = config["use_loss_weights"] == "True" if "use_loss_weights" in config else False
     learning_rate = config["learning_rate"] if "learning_rate" in config else 0.1
     mini_batch_size = config["batch_size"] if "batch_size" in config else 32
     max_epochs = config["max_epochs"] if "max_epochs" in config else 150
@@ -54,6 +54,7 @@ if __name__ == "__main__":
         word_embeddings = [WordEmbeddings('glove')]
 
     if doc_embedding == "custom":
+        print("Using custom document rnn embedding with word level attention")
         document_embeddings = CustomDocumentRNNEmbeddings(embeddings=word_embeddings,
                                                           hidden_size=hidden_size,
                                                           rnn_layers=rnn_layers,

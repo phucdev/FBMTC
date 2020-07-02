@@ -54,7 +54,7 @@ class CustomDocumentRNNEmbeddings(DocumentEmbeddings):
 
         self.__embedding_length: int = hidden_size
         if self.bidirectional:
-            self.__embedding_length *= 4
+            self.__embedding_length *= 2
 
         self.embeddings_dimension: int = self.length_of_all_token_embeddings
         if self.reproject_words and reproject_words_dimension is not None:
