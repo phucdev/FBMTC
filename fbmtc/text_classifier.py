@@ -5,8 +5,12 @@ from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
 import sys
 import json
+import logging
 from fbmtc import utils
 from fbmtc.custom_document_embeddings import CustomDocumentRNNEmbeddings
+
+log = logging.getLogger("flair")
+
 
 if __name__ == "__main__":
     """
@@ -39,8 +43,10 @@ if __name__ == "__main__":
 
     # make the label dictionary from the corpus
     label_dictionary = corpus.make_label_dictionary()
-    # TODO check calculate inverted class frequencies to pass as loss weights to the text classifier
-    class_weights = utils.get_inverted_class_balance(corpus.train.dataset)
+    class_weights = None
+    if use_loss_weights:
+        # TODO check calculate inverted class frequencies to pass as loss weights to the text classifier
+        class_weights = utils.get_inverted_class_balance(corpus.train.dataset)
 
     # initialize embeddings
     chosen_embeddings = config["word_embeddings"]
@@ -54,7 +60,7 @@ if __name__ == "__main__":
         word_embeddings = [WordEmbeddings('glove')]
 
     if doc_embedding == "custom":
-        print("Using custom document rnn embedding with word level attention")
+        log.info("Using custom document rnn embedding with word level attention")
         document_embeddings = CustomDocumentRNNEmbeddings(embeddings=word_embeddings,
                                                           hidden_size=hidden_size,
                                                           rnn_layers=rnn_layers,
@@ -69,14 +75,9 @@ if __name__ == "__main__":
                                                     dropout=dropout)
 
     # initialize text classifier
-    if use_loss_weights:
-        classifier = TextClassifier(document_embeddings,
-                                    label_dictionary=label_dictionary,
-                                    multi_label=False, loss_weights=class_weights)
-    else:
-        classifier = TextClassifier(document_embeddings,
-                                    label_dictionary=label_dictionary,
-                                    multi_label=False)
+    classifier = TextClassifier(document_embeddings,
+                                label_dictionary=label_dictionary,
+                                multi_label=False, loss_weights=class_weights)
 
     # initialize trainer
     trainer = ModelTrainer(classifier, corpus)
