@@ -1,4 +1,4 @@
-from flair.embeddings import WordEmbeddings, FlairEmbeddings, TransformerWordEmbeddings
+from flair.embeddings import WordEmbeddings, FlairEmbeddings, TransformerWordEmbeddings, FastTextEmbeddings
 
 
 def get_general_embeddings():
@@ -20,6 +20,14 @@ def get_mixed_bio_embeddings():
 def get_bio_embeddings():
     return [
         WordEmbeddings("data/BioWordVec_PubMed_MIMICIII_d200.gensim"),
+        FlairEmbeddings("pubmed-forward"),
+        FlairEmbeddings("pubmed-backward")
+    ]
+
+
+def get_bio_ft_embeddings():
+    return [
+        FastTextEmbeddings("data/BioWordVec_PubMed_MIMICIII_d200.bin"),
         FlairEmbeddings("pubmed-forward"),
         FlairEmbeddings("pubmed-backward")
     ]

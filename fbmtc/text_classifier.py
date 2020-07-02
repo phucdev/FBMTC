@@ -56,6 +56,8 @@ if __name__ == "__main__":
         word_embeddings = utils.get_mixed_bio_embeddings()
     elif chosen_embeddings == "bio":
         word_embeddings = utils.get_bio_embeddings()
+    elif chosen_embeddings == "bio_ft":
+        word_embeddings = utils.get_bio_ft_embeddings()
     else:
         word_embeddings = [WordEmbeddings('glove')]
 
