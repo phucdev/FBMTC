@@ -1,12 +1,12 @@
 from flair.data import Corpus
-from flair.datasets import CSVClassificationCorpus, CSVClassificationDataset
-from flair.embeddings import DocumentRNNEmbeddings
+from flair.datasets import CSVClassificationCorpus
+from flair.embeddings import DocumentRNNEmbeddings, WordEmbeddings
 from flair.models import TextClassifier
 from flair.trainers import ModelTrainer
 import sys
 import json
 from fbmtc import utils
-
+from fbmtc.custom_document_embeddings import CustomDocumentRNNEmbeddings
 
 if __name__ == "__main__":
     """
@@ -14,6 +14,19 @@ if __name__ == "__main__":
     """
     with open(sys.argv[1], 'rb') as f:
         config = json.load(f)
+
+    # set parameters from config
+    data_folder = config["data_folder"]
+    hidden_size = config["hidden_size"] if "hidden_size" in config else 256
+    bidirectional = config["bidirectional"] == "True" if "bidirectional" in config else True
+    rnn_layers = config["rnn_layers"] if "rnn_layers" in config else 1
+    dropout = config["dropout"] if "dropout" in config else 0.5
+    doc_embedding = config["doc_embedding"] if "doc_embedding" in config else "normal_rnn"
+    attention_size = config["attention_size"] if "attention_size" in config else 100
+    use_loss_weights = config["use_loss_weights"] if "use_loss_weights" in config else False
+    learning_rate = config["learning_rate"] if "learning_rate" in config else 0.1
+    mini_batch_size = config["batch_size"] if "batch_size" in config else 32
+    max_epochs = config["max_epochs"] if "max_epochs" in config else 150
 
     # get the corpus
     column_name_map = {0: config["label_name"], 1: "text"}
@@ -26,11 +39,10 @@ if __name__ == "__main__":
 
     # make the label dictionary from the corpus
     label_dictionary = corpus.make_label_dictionary()
-    # TODO calculate inverted class frequencies to pass as loss weights to the text classifier
+    # TODO check calculate inverted class frequencies to pass as loss weights to the text classifier
     class_weights = utils.get_inverted_class_balance(corpus.train.dataset)
 
     # initialize embeddings
-    word_embeddings = None
     chosen_embeddings = config["word_embeddings"]
     if chosen_embeddings == "general":
         word_embeddings = utils.get_general_embeddings()
@@ -38,26 +50,39 @@ if __name__ == "__main__":
         word_embeddings = utils.get_mixed_bio_embeddings()
     elif chosen_embeddings == "bio":
         word_embeddings = utils.get_bio_embeddings()
-    elif chosen_embeddings == "scibert_flair":
-        word_embeddings = utils.get_scibert_flair_embeddings()
+    else:
+        word_embeddings = [WordEmbeddings('glove')]
 
-    # TODO keep in mind that state of the art models use the fine tuned transformer approach:
-    #  https://github.com/flairNLP/flair/issues/1527#issuecomment-616638837
-    #  Corresponding example code: https://github.com/flairNLP/flair/issues/1527#issuecomment-616095945
-    document_embeddings = DocumentRNNEmbeddings(word_embeddings, hidden_size=256)
+    if doc_embedding == "custom":
+        document_embeddings = CustomDocumentRNNEmbeddings(embeddings=word_embeddings,
+                                                          hidden_size=hidden_size,
+                                                          rnn_layers=rnn_layers,
+                                                          bidirectional=bidirectional,
+                                                          dropout=dropout,
+                                                          attention_size=attention_size)
+    else:
+        document_embeddings = DocumentRNNEmbeddings(embeddings=word_embeddings,
+                                                    hidden_size=hidden_size,
+                                                    rnn_layers=rnn_layers,
+                                                    bidirectional=bidirectional,
+                                                    dropout=dropout)
 
     # initialize text classifier
-
-    classifier = TextClassifier(document_embeddings,
-                                label_dictionary=label_dictionary,
-                                multi_label=False, loss_weights=class_weights)
+    if use_loss_weights:
+        classifier = TextClassifier(document_embeddings,
+                                    label_dictionary=label_dictionary,
+                                    multi_label=False, loss_weights=class_weights)
+    else:
+        classifier = TextClassifier(document_embeddings,
+                                    label_dictionary=label_dictionary,
+                                    multi_label=False)
 
     # initialize trainer
     trainer = ModelTrainer(classifier, corpus)
 
     # train_with_dev: use option for final model
     trainer.train(sys.argv[2],
-                  learning_rate=config["learning_rate"],
-                  mini_batch_size=config["batch_size"],
-                  max_epochs=config["max_epochs"],
+                  learning_rate=learning_rate,
+                  mini_batch_size=mini_batch_size,
+                  max_epochs=max_epochs,
                   embeddings_storage_mode="gpu")
