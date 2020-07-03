@@ -31,6 +31,7 @@ if __name__ == "__main__":
     learning_rate = config["learning_rate"] if "learning_rate" in config else 0.1
     mini_batch_size = config["batch_size"] if "batch_size" in config else 32
     max_epochs = config["max_epochs"] if "max_epochs" in config else 150
+    train_with_dev = config["train_with_dev"] == "True" if "train_with_dev" in config else False
 
     # get the corpus
     column_name_map = {0: config["label_name"], 1: "text"}
@@ -89,4 +90,5 @@ if __name__ == "__main__":
                   learning_rate=learning_rate,
                   mini_batch_size=mini_batch_size,
                   max_epochs=max_epochs,
+                  train_with_dev=train_with_dev,
                   embeddings_storage_mode="gpu")
