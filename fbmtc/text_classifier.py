@@ -7,7 +7,7 @@ import sys
 import json
 import logging
 from fbmtc import utils
-from fbmtc.custom_document_embeddings import CustomDocumentRNNEmbeddings
+from fbmtc.custom_document_embeddings import DocumentRNNAttentionEmbeddings
 
 log = logging.getLogger("flair")
 
@@ -49,26 +49,26 @@ if __name__ == "__main__":
         class_weights = utils.get_inverted_class_balance(corpus.train.dataset)
 
     # initialize embeddings
-    chosen_embeddings = config["word_embeddings"]
-    if chosen_embeddings == "general":
-        word_embeddings = utils.get_general_embeddings()
-    elif chosen_embeddings == "mixed_bio":
-        word_embeddings = utils.get_mixed_bio_embeddings()
-    elif chosen_embeddings == "bio":
-        word_embeddings = utils.get_bio_embeddings()
-    elif chosen_embeddings == "bio_ft":
-        word_embeddings = utils.get_bio_ft_embeddings()
-    else:
-        word_embeddings = [WordEmbeddings('glove')]
+    word_embeddings = [WordEmbeddings('glove')]
+    if "word_embeddings" in config:
+        chosen_embeddings = config["word_embeddings"]
+        if chosen_embeddings == "general":
+            word_embeddings = utils.get_general_embeddings()
+        elif chosen_embeddings == "mixed_bio":
+            word_embeddings = utils.get_mixed_bio_embeddings()
+        elif chosen_embeddings == "bio":
+            word_embeddings = utils.get_bio_embeddings()
+        elif chosen_embeddings == "bio_ft":
+            word_embeddings = utils.get_bio_ft_embeddings()
 
     if doc_embedding == "custom":
         log.info("Using custom document rnn embedding with word level attention")
-        document_embeddings = CustomDocumentRNNEmbeddings(embeddings=word_embeddings,
-                                                          hidden_size=hidden_size,
-                                                          rnn_layers=rnn_layers,
-                                                          bidirectional=bidirectional,
-                                                          dropout=dropout,
-                                                          attention_size=attention_size)
+        document_embeddings = DocumentRNNAttentionEmbeddings(embeddings=word_embeddings,
+                                                             hidden_size=hidden_size,
+                                                             rnn_layers=rnn_layers,
+                                                             bidirectional=bidirectional,
+                                                             dropout=dropout,
+                                                             attention_size=attention_size)
     else:
         document_embeddings = DocumentRNNEmbeddings(embeddings=word_embeddings,
                                                     hidden_size=hidden_size,

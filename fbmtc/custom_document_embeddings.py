@@ -13,7 +13,7 @@ from flair.nn import LockedDropout, WordDropout
 log = logging.getLogger("flair")
 
 
-class CustomDocumentRNNEmbeddings(DocumentEmbeddings):
+class DocumentRNNAttentionEmbeddings(DocumentEmbeddings):
     def __init__(
             self,
             embeddings: List[TokenEmbeddings],
@@ -75,16 +75,14 @@ class CustomDocumentRNNEmbeddings(DocumentEmbeddings):
             batch_first=True,
         )
 
-        # Word level attention network (Weights, bias)
+        # One-layer MLP to get hidden representation of word annotation
         if self.bidirectional:
             self.word_attention = torch.nn.Linear(2 * hidden_size, self.attention_size)
         else:
             self.word_attention = torch.nn.Linear(hidden_size, self.attention_size)
+        # Word level context vector to measure importance of word: forward method does dot-product for us
+        # --> output = input.matmul(weight.t())
         self.word_context_vector = torch.nn.Linear(self.attention_size, 1, bias=False)
-        # You could also do this with:
-        # self.word_context_vector = nn.Parameter(torch.FloatTensor(1, word_att_size))
-        # self.word_context_vector.data.uniform_(-0.1, 0.1)
-        # And then take the dot-product
 
         self.name = "document_gru"
 
@@ -165,30 +163,37 @@ class CustomDocumentRNNEmbeddings(DocumentEmbeddings):
         )
         rnn_out, hidden = self.rnn(packed)
 
-        # Find attention vectors by applying the attention linear layer on the output of the RNN
-        att_w = self.word_attention(rnn_out.data)  # (n_words, att_size) weights multiplied with hidden state + bias
-        att_w = torch.tanh(att_w)  # (n_words, att_size)
-        # Take the dot-product of the attention vectors with the context vector (i.e. parameter of linear layer)
-        att_w = self.word_context_vector(att_w).squeeze(1)  # (n_words)
-        # First, take the exponent
-        # TODO check whether subtracting max value from att_w makes sense
-        max_value = att_w.max()  # scalar, for numerical stability during exponent calculation
-        att_w = torch.exp(att_w - max_value)  # (n_words)
-        packed_att_w = PackedSequence(data=att_w,
+        # Attention mechanism is inspired by word attention network in:
+        # https://github.com/sgrvinod/a-PyTorch-Tutorial-to-Text-Classification/blob/ec11e234bbbae2adcd7d665489999410911a9fb4/model.py#L173
+
+        # Feed word annotation through one layer MLP to get hidden representation
+        hidden_rep = self.word_attention(rnn_out.data)
+        hidden_rep = torch.tanh(hidden_rep)
+
+        # Measure importance of word as similarity of hidden representation with word level context vector
+        # To get normalized attention weights perform softmax function in steps
+        # 1. Take the dot-product of the attention vectors with the context vector (i.e. parameter of linear layer)
+        att_weights = self.word_context_vector(hidden_rep).squeeze(1)  # (n_words)
+        # 2. Take the exponent
+        max_value = att_weights.max()  # scalar, for numerical stability during exponent calculation
+        att_weights = torch.exp(att_weights - max_value)  # (n_words)
+        # Re-arrange attention weights as sentences
+        packed_att_w = PackedSequence(data=att_weights,
                                       batch_sizes=rnn_out.batch_sizes,
                                       sorted_indices=rnn_out.sorted_indices,
                                       unsorted_indices=rnn_out.unsorted_indices)
-        att_w, output_lengths = pad_packed_sequence(packed_att_w,
-                                                    batch_first=True)  # (n_sentences, max(words_per_sentence))
-        # Calculate softmax values as now words are arranged in their respective sentences
-        word_alphas = att_w / torch.sum(att_w, dim=1, keepdim=True)  # (n_sentences, max(words_per_sentence))
+        att_weights, output_lengths = pad_packed_sequence(packed_att_w,
+                                                          batch_first=True)  # (n_sentences, max(words_per_sentence))
+        # 3. Calculate softmax values: could have called F.softmax here instead of doing exp before re-arrangement?
+        att_weights = att_weights / torch.sum(att_weights,
+                                              dim=1, keepdim=True)  # (n_sentences, max(words_per_sentence))
 
-        # Similarly re-arrange word-level RNN outputs as sentences by re-padding with 0s (WORDS -> SENTENCES)
+        # Re-arrange word-level RNN outputs as sentences by re-padding with 0s (WORDS -> SENTENCES)
         outputs, _ = pad_packed_sequence(rnn_out,
                                          batch_first=True)  # (n_sentences, max(words_per_sentence), 2 * word_rnn_size)
 
-        # Find sentence embeddings
-        outputs = outputs * word_alphas.unsqueeze(2)  # (n_sentences, max(words_per_sentence), 2 * word_rnn_size)
+        # Compute sentence embeddings as weighted sum of word annotations based on the attention weights
+        outputs = outputs * att_weights.unsqueeze(2)  # (n_sentences, max(words_per_sentence), 2 * word_rnn_size)
         outputs = outputs.sum(dim=1)  # (n_sentences, 2 * word_rnn_size)
 
         # after-RNN dropout
