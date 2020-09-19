@@ -16,12 +16,14 @@ tqdm.pandas()
 
 
 def predict_doc(doc, binary_classifier, multi_class_classifier):
-    binary_result = predictor.predict_instance(binary_classifier, Sentence(doc['text']))['prediction']
+    binary_result = predictor.predict_instance(
+        binary_classifier, Sentence(doc['text'], use_tokenizer=True))['prediction']
 
     if multi_class_classifier is not None:
         if binary_result != NEGATIVE_IS_CANCER:
             doc['is_cancer'] = binary_result
-            multi_class_result = predictor.predict_instance(multi_class_classifier, Sentence(doc['text']))['prediction']
+            multi_class_result = predictor.predict_instance(
+                multi_class_classifier, Sentence(doc['text'], use_tokenizer=True))['prediction']
             doc['doid'] = multi_class_result
         else:
             doc['is_cancer'] = NEGATIVE_IS_CANCER
