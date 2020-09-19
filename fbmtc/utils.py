@@ -1,4 +1,6 @@
 from flair.embeddings import WordEmbeddings, FlairEmbeddings, TransformerWordEmbeddings, FastTextEmbeddings
+import pandas as pd
+from sklearn.model_selection import train_test_split
 
 
 def get_general_embeddings():
@@ -61,13 +63,14 @@ def get_inverted_class_balance(dataset):
     return class_balance
 
 
-# pd.read_csv(DATAPATH+'/train.tsv', sep='\t', header=0)
-#
-# train, dev, train_y, dev_y = train_test_split(train_df, train_df['is_cancer'], stratify=train_df['is_cancer'], test_size=0.2)
-#
-# train[['is_cancer', 'text']].to_csv(DATAPATH+'/task1/train.csv', sep='\t', index = False, header = True)
-# dev[['is_cancer', 'text']].to_csv(DATAPATH+'/task1/dev.csv', sep='\t', index = False, header = True)
-#
-# train[['doid', 'text']].to_csv(DATAPATH+'/task2/train.csv', sep='\t', index = False, header = True)
-# dev[['doid', 'text']].to_csv(DATAPATH+'/task2/dev.csv', sep='\t', index = False, header = True)
+def prepare_data(data_path):
+    train_df = pd.read_csv(data_path + '/train.tsv', sep='\t', header=0)
 
+    train, dev, train_y, dev_y = train_test_split(
+        train_df, train_df['is_cancer'], stratify=train_df['is_cancer'], test_size=0.2)
+
+    train[['is_cancer', 'text']].to_csv(data_path+'/task1/train.csv', sep='\t', index = False, header = True)
+    dev[['is_cancer', 'text']].to_csv(data_path+'/task1/dev.csv', sep='\t', index = False, header = True)
+
+    train[['doid', 'text']].to_csv(data_path+'/task2/train.csv', sep='\t', index = False, header = True)
+    dev[['doid', 'text']].to_csv(data_path+'/task2/dev.csv', sep='\t', index = False, header = True)
